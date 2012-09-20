@@ -1,14 +1,18 @@
-package org.amici.server;
+package org.amici.messages;
 
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
 
-import org.amici.utils.CertificateUtils;
+import org.amici.CertificateUtils;
+
+import com.google.gson.Gson;
 
 public class CertificateRegistration implements Serializable{
 	private static final long serialVersionUID = 7286368834000815041L;
 	private String email;
 	private X509Certificate certificate;
+
+	private static Gson gson = new Gson();
 	
 	public CertificateRegistration(String email, X509Certificate certificate){
 		this.email = email;
@@ -25,5 +29,9 @@ public class CertificateRegistration implements Serializable{
 	
 	public boolean isTrusted(){
 		return CertificateUtils.isTrusted(certificate, email);
+	}
+
+	public String toString(){
+		return gson.toJson(this);
 	}
 }

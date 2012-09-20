@@ -7,19 +7,19 @@ import java.security.cert.X509Certificate;
 import java.util.*;
 
 import org.amici.Amici;
-import org.amici.Message;
-import org.amici.server.handlers.CertificateHandler;
-import org.amici.utils.CertificateUtils;
+import org.amici.CertificateUtils;
+import org.amici.messages.Dump;
+import org.amici.messages.Post;
 
 public class BasicDataStoreImpl implements DataStore {
 	private Map<String,X509Certificate> certificates = new HashMap<String,X509Certificate>();
-	private Map<String,Set<Message>> authoredMessages = new HashMap<String,Set<Message>>();
-	private Map<String,Set<Message>> mentionedMessages = new HashMap<String,Set<Message>>();
-	private Map<String,Set<Message>> taggedMessages = new HashMap<String,Set<Message>>();
+	private Map<String,Set<Post>> authoredMessages = new HashMap<String,Set<Post>>();
+	private Map<String,Set<Post>> mentionedMessages = new HashMap<String,Set<Post>>();
+	private Map<String,Set<Post>> taggedMessages = new HashMap<String,Set<Post>>();
 	
 	public boolean registerCertificate(String email, X509Certificate certificate) {
 		if(CertificateUtils.isTrusted(certificate, email)){
-			System.out.println("Registering: " + email);
+			Amici.getLogger(BasicDataStoreImpl.class).trace("Registering: "+email);
 			certificates.put(email, certificate);
 			return true;
 		}else return false;
@@ -29,17 +29,17 @@ public class BasicDataStoreImpl implements DataStore {
 		return certificates.get(email);
 	}
 	
-	private void putMessageIntoMap(Map<String,Set<Message>> map, String key, Message message){
-		Set<Message> list = map.get(key);
+	private void putMessageIntoMap(Map<String,Set<Post>> map, String key, Post message){
+		Set<Post> list = map.get(key);
 		if( list == null ){
-			list = new HashSet<Message>();
+			list = new HashSet<Post>();
 			map.put(key,list);
 		}
-		System.out.println("Mapping("+Amici.getIdentifier()+"): " + key + " to " + message);
+		Amici.getLogger(BasicDataStoreImpl.class).trace("Mapping("+Amici.getIdentifier()+"): " + key + " to " + message.getBase64Hash());
 		list.add(message);
 	}
 	
-	public void addMessage(Message message) {
+	public void addMessage(Post message) {
 		message.addHostingDetails(Amici.getServer().getRouter().getLocalNode(), Amici.HOST_IDENTIFIER);
 		putMessageIntoMap( authoredMessages, message.getAuthor(), message);
 
@@ -51,14 +51,14 @@ public class BasicDataStoreImpl implements DataStore {
 	}
 
 	@Override
-	public Set<Message> collectCloseMessages(KeyComparator comparator, Key thisNode) {
-		Set<Message> result = new HashSet<Message>();
+	public Dump collectDump(KeyComparator comparator, Key thisNode) {
+		Dump dump = new Dump();
 		
 	    Iterator<String> authIterator= authoredMessages.keySet().iterator();
 	    while(authIterator.hasNext()){
 	    	String key = authIterator.next();	
 	    	if( comparator.compare(thisNode, Amici.getServer().getKeyFactory().create(key)) == -1 )
-		    	result.addAll(authoredMessages.get(key));
+	    		dump.addAll(authoredMessages.get(key));
 	    }
 	    	
 	    
@@ -66,52 +66,58 @@ public class BasicDataStoreImpl implements DataStore {
 	    while(tagIterator.hasNext()){
 	    	String key = tagIterator.next();		
 	    	if( comparator.compare(thisNode, Amici.getServer().getKeyFactory().create(key)) == -1 )
-		    	result.addAll(taggedMessages.get(key));
+	    		dump.addAll(taggedMessages.get(key));
 	    }
 	    
 	    Iterator<String> menIterator= mentionedMessages.keySet().iterator();
 	    while(menIterator.hasNext()){
 	    	String key = menIterator.next();	
 	    	if( comparator.compare(thisNode, Amici.getServer().getKeyFactory().create(key)) == -1 )
-		    	result.addAll(mentionedMessages.get(key));
+	    		dump.addAll(mentionedMessages.get(key));
 	    }
 	    
-	    return result;
+	    return dump;
+	}
+	
+	public void addDump(Dump dump){
+		Iterator<Post> postIterator = dump.getContents().iterator();
+		while(postIterator.hasNext())
+			addMessage(postIterator.next());
 	}
 
-	public Set<Message> getUserFeed(String user, int count) {
-		Set<Message> result = new TreeSet<Message>();
+	public Set<Post> getUserFeed(String user, long since, long until, int count) {
+		Set<Post> result = new TreeSet<Post>();
 		
 		if(!authoredMessages.containsKey(user))
 			return result;
 		
-		Iterator <Message> it = authoredMessages.get(user).iterator();
+		Iterator <Post> it = authoredMessages.get(user).iterator();
 		int i = 0;
 		while( i++ < count && it.hasNext() )
 			result.add(it.next());
 		return result;
 	}
 
-	public Set<Message> getHashTagFeed(String hashtag, int count) {
-		Set<Message> result = new TreeSet<Message>();
+	public Set<Post> getHashTagFeed(String hashtag, long since, long until, int count) {
+		Set<Post> result = new TreeSet<Post>();
 		
-		if(!authoredMessages.containsKey(hashtag))
+		if(!taggedMessages.containsKey(hashtag))
 			return result;
 		
-		Iterator <Message> it = taggedMessages.get(hashtag).iterator();
+		Iterator <Post> it = taggedMessages.get(hashtag).iterator();
 		int i = 0;
 		while( i++ < count && it.hasNext() )
 			result.add(it.next());
 		return result;
 	}
 
-	public Set<Message> getMentionFeed(String user, int count) {
-		Set<Message> result = new TreeSet<Message>();
+	public Set<Post> getMentionFeed(String user, long since, long until, int count) {
+		Set<Post> result = new TreeSet<Post>();
 		
-		if(!authoredMessages.containsKey(user))
+		if(!mentionedMessages.containsKey(user))
 			return result;
 		
-		Iterator <Message> it = mentionedMessages.get(user).iterator();
+		Iterator <Post> it = mentionedMessages.get(user).iterator();
 		int i = 0;
 		while( i++ < count && it.hasNext() )
 			result.add(it.next());

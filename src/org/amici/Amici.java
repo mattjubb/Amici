@@ -6,37 +6,34 @@ import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.util.logging.Level;
+
 import org.amici.server.DataStore;
 import org.amici.server.BasicDataStoreImpl;
-import org.amici.server.FutureWorker;
+import org.amici.server.HttpRestServer;
 import org.amici.server.Server;
 import org.amici.server.BasicServerImpl;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Amici {
 
 	private static DataStore dataStore = null;
 	private static Server server = null;
 	private static boolean initialised = false;
-	private static Logger logger = Logger.getRootLogger();
 	
 	public static String HOST_IDENTIFIER = "AmiciBeta";
 	
 	public static void main(String[] args) throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException, URISyntaxException {
 		URI peer = args.length == 2 ? new URI(args[1]) : null;
 		startup(Integer.parseInt(args[0]), peer);
+		HttpRestServer.startup(8080);
 	}
 	
 	public static synchronized void startup( int port, URI peer ){
 		if( !initialised ){
-			getLogger().setLevel(Level.ALL);
 			server = new BasicServerImpl( port, peer );
 			dataStore = new BasicDataStoreImpl();
-			FutureWorker.startup();
 			initialised = true;
 		}
 	}
@@ -58,10 +55,11 @@ public class Amici {
 	}
 	
 	public static Logger getLogger(){
-		return logger;
+		return LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static Logger getLogger(Class clazz){
-		return Logger.getLogger(clazz);
+		return LoggerFactory.getLogger(clazz);
 	}
 }
