@@ -18,10 +18,10 @@ public class ClientHandler implements MessageHandler{
 	
 	public void onIncomingMessage(Node from, String tag, Serializable content) {
 		if( content instanceof Post ){
-			Post message = (Post) content;
-			X509Certificate certificate = Amici.getDataStore().getCertificate(message.getAuthor());
-			if(message.verify(certificate))
-				Amici.getDataStore().addMessage(message);
+			Post post = (Post) content;
+			X509Certificate certificate = Amici.getDataStore().getCertificate(post.getAuthor(),post.getDate());
+			if(certificate != null && post.verify(certificate))
+				Amici.getDataStore().addPost(post);
 		}
 	}
 

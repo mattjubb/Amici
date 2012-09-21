@@ -32,7 +32,6 @@ public class BasicServerImpl implements Server {
 	private KeyFactory keyFactory;
 	
 	public BasicServerImpl(int basePort, URI seedNode){	
-
 		Injector injector = Guice.createInjector(new KadNetModule()
 				.setProperty("openkad.keyfactory.keysize", "3")
 				.setProperty("openkad.bucket.kbuckets.maxsize", "3")
@@ -56,6 +55,7 @@ public class BasicServerImpl implements Server {
 	
 	public void registerCertificate(String email, X509Certificate certificate) throws IOException{
 		CertificateRegistration registration = new CertificateRegistration(email,certificate);
+		System.out.println();
 		if(!registration.isTrusted()){
 			Amici.getLogger(BasicServerImpl.class).error( "Couldn't register: " + email );
 			return;
@@ -94,9 +94,9 @@ public class BasicServerImpl implements Server {
 	}
 
 	@Override
-	public void postMessage(Post message) throws IOException {
-		for(Node node:getNodesForKeys(message.getKeys()))
-			getRouter().sendMessage(node, ClientHandler.TAG, message);
+	public void post(Post post) throws IOException {
+		for(Node node:getNodesForKeys(post.getKeys()))
+			getRouter().sendMessage(node, ClientHandler.TAG, post);
 	}
 	
 	private Set<Node> getNodesForKeys(Set<Key> keys){

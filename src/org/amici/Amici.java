@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.util.logging.Level;
 
 import org.amici.server.DataStore;
 import org.amici.server.BasicDataStoreImpl;

@@ -1,16 +1,19 @@
 package org.amici.server;
 import il.technion.ewolf.kbr.concurrent.CompletionHandler;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.amici.Amici;
 import org.amici.messages.ClientRequest;
+import org.amici.messages.Post;
 import org.deftserver.io.IOLoop;
 import org.deftserver.web.Application;
 import org.deftserver.web.Asynchronous;
 import org.deftserver.web.HttpServer;
+import org.deftserver.web.HttpVerb;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpRequest;
 import org.deftserver.web.http.HttpResponse;
@@ -33,6 +36,7 @@ public class HttpRestServer implements Runnable {
          handlers.put("/feed/tag/(.*)", new HttpRestHandler());
          handlers.put("/feed/mentions/(.*)", new HttpRestHandler());
          handlers.put("/post", new HttpRestHandler());
+         handlers.put("/register", new HttpRestHandler());
          HttpServer server = new HttpServer(new Application(handlers));
          server.listen(8080);
 
@@ -63,7 +67,7 @@ public class HttpRestServer implements Runnable {
 	    		}
 	    	};
 	        
-	    	if(args[1].equalsIgnoreCase("feed")){
+	    	if(args[1].equalsIgnoreCase("feed") && httpRequest.getMethod() == HttpVerb.GET ){
 	            String param = args[3];
 	    		switch(args[2].toLowerCase()){
 					case "user" : {
@@ -79,7 +83,14 @@ public class HttpRestServer implements Runnable {
 						break;
 					}
 	    		}
-	    	}else if(args[1].equalsIgnoreCase("post")){
+	    	}else if(args[1].equalsIgnoreCase("post") && httpRequest.getMethod() == HttpVerb.POST){
+	    		try {
+					Amici.getServer().post( Post.fromJson(httpRequest.getBody()) );
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    	}else if(args[1].equalsIgnoreCase("register")){
 	    		
 	    	}
 	    	

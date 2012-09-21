@@ -12,7 +12,7 @@ import org.amici.messages.Dump;
 import org.amici.messages.Post;
 
 public class BasicDataStoreImpl implements DataStore {
-	private Map<String,X509Certificate> certificates = new HashMap<String,X509Certificate>();
+	private Map<String,List<X509Certificate>> certificates = new HashMap<String,List<X509Certificate>>();
 	private Map<String,Set<Post>> authoredMessages = new HashMap<String,Set<Post>>();
 	private Map<String,Set<Post>> mentionedMessages = new HashMap<String,Set<Post>>();
 	private Map<String,Set<Post>> taggedMessages = new HashMap<String,Set<Post>>();
@@ -20,34 +20,45 @@ public class BasicDataStoreImpl implements DataStore {
 	public boolean registerCertificate(String email, X509Certificate certificate) {
 		if(CertificateUtils.isTrusted(certificate, email)){
 			Amici.getLogger(BasicDataStoreImpl.class).trace("Registering: "+email);
-			certificates.put(email, certificate);
+			if(certificates.containsKey(email))
+				certificates.get( email ).add(certificate);
+			else {
+				List<X509Certificate> list = new LinkedList<X509Certificate>();
+				list.add(certificate);
+				certificates.put(email, list);
+			}
 			return true;
 		}else return false;
 	}
 
-	public X509Certificate getCertificate(String email) {
-		return certificates.get(email);
+	public X509Certificate getCertificate(String email, Date date) {
+		List<X509Certificate> possibles = certificates.get(email);
+		for(X509Certificate cert:possibles){
+			if( date.before(cert.getNotAfter()) && date.after(cert.getNotBefore()) ) 
+				return cert;
+		}
+		return null;
 	}
 	
-	private void putMessageIntoMap(Map<String,Set<Post>> map, String key, Post message){
+	private void putPostIntoMap(Map<String,Set<Post>> map, String key, Post post){
 		Set<Post> list = map.get(key);
 		if( list == null ){
 			list = new HashSet<Post>();
 			map.put(key,list);
 		}
-		Amici.getLogger(BasicDataStoreImpl.class).trace("Mapping("+Amici.getIdentifier()+"): " + key + " to " + message.getBase64Hash());
-		list.add(message);
+		Amici.getLogger(BasicDataStoreImpl.class).trace("Mapping("+Amici.getIdentifier()+"): " + key + " to " + post.getBase64Hash());
+		list.add(post);
 	}
 	
-	public void addMessage(Post message) {
-		message.addHostingDetails(Amici.getServer().getRouter().getLocalNode(), Amici.HOST_IDENTIFIER);
-		putMessageIntoMap( authoredMessages, message.getAuthor(), message);
+	public void addPost(Post post) {
+		post.addHostingDetails(Amici.getServer().getRouter().getLocalNode(), Amici.HOST_IDENTIFIER);
+		putPostIntoMap( authoredMessages, post.getAuthor(), post);
 
-		for(String tag:message.getTags())
-			putMessageIntoMap( taggedMessages, tag, message);
+		for(String tag:post.getTags())
+			putPostIntoMap( taggedMessages, tag, post);
 		
-		for(String mention:message.getMentions())
-			putMessageIntoMap( mentionedMessages, mention, message);
+		for(String mention:post.getMentions())
+			putPostIntoMap( mentionedMessages, mention, post);
 	}
 
 	@Override
@@ -82,7 +93,7 @@ public class BasicDataStoreImpl implements DataStore {
 	public void addDump(Dump dump){
 		Iterator<Post> postIterator = dump.getContents().iterator();
 		while(postIterator.hasNext())
-			addMessage(postIterator.next());
+			addPost(postIterator.next());
 	}
 
 	public Set<Post> getUserFeed(String user, long since, long until, int count) {

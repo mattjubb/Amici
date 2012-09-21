@@ -1,37 +1,38 @@
-<project name="Amici" default="run" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="Amici" default="build" xmlns:ivy="antlib:org.apache.ivy.ant">
 
     <property name="lib.dir" value="lib" />
     <property name="build.dir" value="build" />
     <property name="src.dir" value="src" />
     
-    <!-- paths used for compilation and run  -->
+	<mkdir dir="${lib.dir}"/>
+	
     <path id="lib.path.id">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
 	</path>
+	
     <path id="run.path.id">
         <path refid="lib.path.id" />
         <path location="${build.dir}" />
     </path>
-		    <manifestclasspath property="jar.list" jarfile="Amici.jar">
-			    <classpath refid="lib.path.id"/>
-			</manifestclasspath>
-    <!-- ================================= 
-          target: resolve              
-         ================================= -->
+
+	<manifestclasspath property="jar.list" jarfile="Amici.jar">
+	    <classpath refid="lib.path.id"/>
+	</manifestclasspath>
+	
     <target name="resolve" description="--> retreive dependencies with ivy">
         <ivy:retrieve/>
+		<get dest="${lib.dir}">
+		  <url url="http://cloud.github.com/downloads/mattjubb/Amici/deft-0.3.0.jar"/> 
+		  <url url="http://cloud.github.com/downloads/mattjubb/Amici/openkad-r27.jar"/>
+		</get>
     </target>    
     
-
-    <!-- ================================= 
-          target: run
-         ================================= -->
     <target name="compile" depends="resolve" description="--> compile the project">
         <mkdir dir="${build.dir}" />
         <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" includeAntRuntime="false"/>
     </target>
 
-	<target name="build" >
+	<target name="build" depends="compile" description="--> build jar">
 		<jar jarfile="Amici.jar" basedir="${build.dir}">
 	        <fileset dir="${lib.dir}"/>
 		    <manifest>
@@ -41,9 +42,6 @@
 		</jar>
  	</target>
 
-    <!-- ================================= 
-          target: clean              
-         ================================= -->
     <target name="clean" description="--> clean the project">
         <delete includeemptydirs="true">
             <fileset dir="${basedir}">
@@ -54,9 +52,6 @@
     	</delete>
     </target>
 	
-    <!-- ================================= 
-          target: clean-cache              
-         ================================= -->
 	<target name="clean-cache" description="--> clean the ivy cache">
 		<ivy:cleancache />
 	</target>

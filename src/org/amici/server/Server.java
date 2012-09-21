@@ -13,7 +13,7 @@ import org.amici.messages.Post;
 
 public interface Server {
 	public void registerCertificate(String email, X509Certificate certificate) throws IOException;
-	public void postMessage(Post message) throws IOException;
+	public void post(Post post) throws IOException;
 	public KeybasedRouting getRouter();
 	public KeyFactory getKeyFactory();
 	public void sendRequest(ClientRequest request, CompletionHandler<Serializable,Object> handler);
