@@ -20,6 +20,8 @@ public class ClientHandler implements MessageHandler{
 		if( content instanceof Post ){
 			Post post = (Post) content;
 			X509Certificate certificate = Amici.getDataStore().getCertificate(post.getAuthor(),post.getDate());
+			System.out.println(certificate);
+			System.out.println(post.verify(certificate));
 			if(certificate != null && post.verify(certificate))
 				Amici.getDataStore().addPost(post);
 		}

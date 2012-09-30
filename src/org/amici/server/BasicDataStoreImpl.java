@@ -134,4 +134,11 @@ public class BasicDataStoreImpl implements DataStore {
 			result.add(it.next());
 		return result;
 	}
+	
+	public void clear(){
+		certificates = new HashMap<String,List<X509Certificate>>();
+		authoredMessages = new HashMap<String,Set<Post>>();
+		mentionedMessages = new HashMap<String,Set<Post>>();
+		taggedMessages = new HashMap<String,Set<Post>>();
+	}
 }

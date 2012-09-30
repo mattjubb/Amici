@@ -53,16 +53,20 @@ public class BasicServerImpl implements Server {
 		Amici.getLogger(BasicServerImpl.class).info("Amici 0.1 on " + router.getLocalNode().getInetAddress() + "/" +  router.getLocalNode().getKey() );
 	}
 	
-	public void registerCertificate(String email, X509Certificate certificate) throws IOException{
+	public boolean registerCertificate(String email, X509Certificate certificate){
 		CertificateRegistration registration = new CertificateRegistration(email,certificate);
-		System.out.println();
 		if(!registration.isTrusted()){
 			Amici.getLogger(BasicServerImpl.class).error( "Couldn't register: " + email );
-			return;
+			return false;
 		}
 		Key key = keyFactory.create(email);
-		for(Node node:router.findNode(key))
-			router.sendMessage(node, ServerHandler.TAG, registration);
+		try {
+			for(Node node:router.findNode(key))
+				router.sendMessage(node, ServerHandler.TAG, registration);
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
 	}
 	
 	public void meetTheNeighbours(){

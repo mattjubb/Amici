@@ -12,8 +12,10 @@ import org.amici.server.BasicDataStoreImpl;
 import org.amici.server.HttpRestServer;
 import org.amici.server.Server;
 import org.amici.server.BasicServerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 public class Amici {
 
@@ -31,6 +33,14 @@ public class Amici {
 	
 	public static synchronized void startup( int port, URI peer ){
 		if( !initialised ){
+			
+			ConsoleAppender console = new ConsoleAppender(); 
+			  String PATTERN = "%d [%p|%c|%C{1}] %m%n";
+			  console.setLayout(new PatternLayout(PATTERN)); 
+			  console.setThreshold(Level.TRACE);
+			  console.activateOptions();
+			  Logger.getRootLogger().addAppender(console);
+			  
 			server = new BasicServerImpl( port, peer );
 			dataStore = new BasicDataStoreImpl();
 			initialised = true;
@@ -54,11 +64,19 @@ public class Amici {
 	}
 	
 	public static Logger getLogger(){
-		return LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+		return Logger.getLogger("org.amici");
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static Logger getLogger(Class clazz){
-		return LoggerFactory.getLogger(clazz);
+		return Logger.getLogger(clazz);
+	}
+	
+	public static boolean isTestingMode(){
+		return Boolean.parseBoolean(System.getProperty("amici_testing"));
+	}
+	
+	public static void clearDataStore(){
+		((BasicDataStoreImpl)dataStore).clear();
 	}
 }

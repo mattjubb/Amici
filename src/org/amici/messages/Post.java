@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +49,14 @@ public class Post implements Serializable, Comparable<Post>{
 
 	public String getText(){
 		return text;
+	}
+	
+	public Date getDate(){
+		return new Date(timeCreated);
+	}
+	
+	public Long getTimeStamp(){
+		return timeCreated;
 	}
 	
 	public List<String> getTags(){
@@ -128,5 +137,9 @@ public class Post implements Serializable, Comparable<Post>{
 		}else{
 			return this == obj;
 		}
+	}
+	
+	public static Post fromJson(String json){
+		return gson.fromJson(json, Post.class);
 	}
 }

@@ -3,10 +3,12 @@ import il.technion.ewolf.kbr.concurrent.CompletionHandler;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.amici.Amici;
+import org.amici.CertificateUtils;
 import org.amici.messages.ClientRequest;
 import org.amici.messages.Post;
 import org.deftserver.io.IOLoop;
@@ -26,6 +28,11 @@ public class HttpRestServer implements Runnable {
     	if(!initialised){
     		HttpRestServer.port = port;
     		new Thread(new HttpRestServer(), "HttpRestServer").start();
+    		try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+ 		 		Amici.getLogger(HttpRestServer.class).error("Exception in RestServer ",e);	
+			}
     	}
     }
 
@@ -36,7 +43,7 @@ public class HttpRestServer implements Runnable {
          handlers.put("/feed/tag/(.*)", new HttpRestHandler());
          handlers.put("/feed/mentions/(.*)", new HttpRestHandler());
          handlers.put("/post", new HttpRestHandler());
-         handlers.put("/register", new HttpRestHandler());
+         handlers.put("/register/(.*)", new HttpRestHandler());
          HttpServer server = new HttpServer(new Application(handlers));
          server.listen(8080);
 
@@ -59,11 +66,10 @@ public class HttpRestServer implements Runnable {
 	    	
 	    	CompletionHandler<Serializable,Object> completionHandler = new CompletionHandler<Serializable,Object>(){
 	    		public void completed(Serializable result, Object attachment) {
-			        httpResponse.write(result.toString());
-			        httpResponse.finish();
+	    			returnStandardReponse(httpResponse, 201, "OK", result);
 	    		}
 	    		public void failed(Throwable ex, Object attachment) {
-	    			
+	    			returnStandardReponse(httpResponse, 500, "ERROR");
 	    		}
 	    	};
 	        
@@ -83,18 +89,30 @@ public class HttpRestServer implements Runnable {
 						break;
 					}
 	    		}
-	    	}else if(args[1].equalsIgnoreCase("post") && httpRequest.getMethod() == HttpVerb.POST){
+	    	}
+	    }
+	    
+	    public void post(HttpRequest httpRequest, final HttpResponse httpResponse){
+	    	httpResponse.setHeader("Content-type","application/json");
+	    	String[] args = httpRequest.getRequestedPath().split("/");
+	    	
+	    	if(args[1].equalsIgnoreCase("post") && httpRequest.getMethod() == HttpVerb.POST){
 	    		try {
 					Amici.getServer().post( Post.fromJson(httpRequest.getBody()) );
+	    			returnStandardReponse(httpResponse, 201, "OK");
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	    			returnStandardReponse(httpResponse, 500, "ERROR");
 				}
-	    	}else if(args[1].equalsIgnoreCase("register")){
-	    		
+	    	}else if(args[1].equalsIgnoreCase("register") && httpRequest.getMethod() == HttpVerb.POST ){
+	    		X509Certificate certificate = CertificateUtils.stringToCertificate(httpRequest.getBody());
+	    		if( Amici.getServer().registerCertificate(args[2], certificate) )
+	    			returnStandardReponse(httpResponse, 201, "OK");
+	    		else
+	    			returnStandardReponse(httpResponse, 500, "ERROR");
 	    	}
-	    	
 	    }
+	    
+	    
 		public void handleUserFeed(String param, final HttpResponse httpResponse, CompletionHandler<Serializable,Object> completionHandler){
 	        ClientRequest request = new ClientRequest( ClientRequest.USER, param );
 	        Amici.getServer().sendRequest(request, completionHandler);
@@ -108,6 +126,18 @@ public class HttpRestServer implements Runnable {
 		public void handleMentionsFeed(String param, final HttpResponse httpResponse, CompletionHandler<Serializable,Object> completionHandler){
 	        ClientRequest request = new ClientRequest( ClientRequest.MENTIONS, param );
 	        Amici.getServer().sendRequest(request, completionHandler);
+		}
+		
+		public static void returnStandardReponse(HttpResponse httpResponse, int code, String status ){
+    		httpResponse.setStatusCode(code);
+	        httpResponse.write("{ status: '"+status+"' }");
+	        httpResponse.finish();
+		}
+		
+		public static void returnStandardReponse(HttpResponse httpResponse, int code, String status, Object data ){
+    		httpResponse.setStatusCode(code);
+	        httpResponse.write("{ status: '"+status+"', data: "+data+" }");
+	        httpResponse.finish();
 		}
 	}
 }

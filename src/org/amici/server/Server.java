@@ -12,7 +12,7 @@ import org.amici.messages.ClientRequest;
 import org.amici.messages.Post;
 
 public interface Server {
-	public void registerCertificate(String email, X509Certificate certificate) throws IOException;
+	public boolean registerCertificate(String email, X509Certificate certificate);
 	public void post(Post post) throws IOException;
 	public KeybasedRouting getRouter();
 	public KeyFactory getKeyFactory();
