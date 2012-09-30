@@ -4,8 +4,8 @@ Amici
 p2p social network
 
 ####Introduction
-Amici is essentially a protocol that facilitates social communication in a distributed manner. 
-In many respects it aims to provide the same functionality as you may expect from Twitter or App.net but without any centralized control/ownership.
+Amici is a protocol that facilitates social communication in a distributed manner. 
+In many respects it aims to provide much of the same functionality as you may expect from Twitter or App.net but without any centralized control/ownership.
 
 ####Background
 I personally believe that Twitter was a revolution. It provided a brand new way of communicating on the internet in a way that changed things on a scale not seen since email.
@@ -27,7 +27,7 @@ An *Amici client* will be per user and does not store any data apart from the us
 
 
 ####Getting Started
-You'll need [Apache Ivy](http://ant.apache.org/ivy/) to manage all the dependencies. Once you've installed that then run the `ant` command.
+You'll need Java 7 and [Apache Ivy](http://ant.apache.org/ivy/) to manage all the dependencies. Once you've installed that then run the `ant` command.
 This will build Amici.jar which you can then run with `java -jar Amici.jar 5555` 
 
 Amici server now be running on port 5555 with the URI openkad.udp://localhost:5555/. This instance is not connected to any other node - to do that youll also need to provide the URI of another Amici node ie `java -jar Amici.jar 5556 openkad.udp://localhost:5555/`
@@ -36,8 +36,9 @@ Amici server now be running on port 5555 with the URI openkad.udp://localhost:55
 * Currently the DataStore implementation (BasicDataStoreImpl) is just a bunch of in memory HashMaps. So there's no persistance. I'd like to replace this with a MongoDB backed storage.
 * No tests - I know pretty bad.
 * Expose all OpenKAD settings somehow - probably launch with a .properties file.
+* REST server is not complete - still missing registration
 
 ####Help?!
 Obviously this could end up being a fairly large project, I've come this far just to demonstrate that it somewhat works. 
 
-But I'd much prefer if it was community driven - so please submit pull requests, suggestions, critiques. I'll try my hardest to be open to them.
+But I'd much prefer if it was community driven - so please submit pull requests, suggestions, critiques, issues. I'll try my hardest to be open to them.
