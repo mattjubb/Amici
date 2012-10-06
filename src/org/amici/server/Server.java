@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
 
+import org.amici.messages.CertificateRequest;
 import org.amici.messages.ClientRequest;
 import org.amici.messages.Post;
 
@@ -17,4 +18,5 @@ public interface Server {
 	public KeybasedRouting getRouter();
 	public KeyFactory getKeyFactory();
 	public void sendRequest(ClientRequest request, CompletionHandler<Serializable,Object> handler);
+	public void requestCertificate(CertificateRequest request, CompletionHandler<Serializable,Object> handler);
 }

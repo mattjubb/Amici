@@ -60,8 +60,7 @@ public class BasicDataStoreImpl implements DataStore {
 		for(String mention:post.getMentions())
 			putPostIntoMap( mentionedMessages, mention, post);
 	}
-
-	@Override
+	
 	public Dump collectDump(KeyComparator comparator, Key thisNode) {
 		Dump dump = new Dump();
 		

@@ -5,9 +5,11 @@ import il.technion.ewolf.kbr.MessageHandler;
 import il.technion.ewolf.kbr.Node;
 
 import java.io.Serializable;
+import java.security.cert.X509Certificate;
 
 import org.amici.Amici;
 import org.amici.messages.CertificateRegistration;
+import org.amici.messages.CertificateRequest;
 import org.amici.messages.Dump;
 
 public class ServerHandler implements MessageHandler{
@@ -29,6 +31,9 @@ public class ServerHandler implements MessageHandler{
 		if (tag.equalsIgnoreCase(Dump.TAG)){
 			KeyComparator comparator = new KeyComparator( from.getKey() );
 			return Amici.getDataStore().collectDump(comparator, Amici.getServer().getRouter().getLocalNode().getKey());
+		} else if(tag.equalsIgnoreCase(CertificateRequest.TAG)){
+			CertificateRequest request = (CertificateRequest) content;
+			return Amici.getDataStore().getCertificate(request.getEmail(),request.getDate());
 		}
 		return null;
 	}

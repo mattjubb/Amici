@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.amici.Amici;
 import org.amici.messages.CertificateRegistration;
+import org.amici.messages.CertificateRequest;
 import org.amici.messages.ClientRequest;
 import org.amici.messages.Dump;
 import org.amici.messages.Post;
@@ -126,5 +127,12 @@ public class BasicServerImpl implements Server {
 		Node node = getRouter().findNode(getKey(request.getParam())).get(0);
 		Amici.getLogger(BasicServerImpl.class).trace("Sent request " + request.getType() +"/"+request.getParam() + " to " + node );	
 		getRouter().sendRequest( node, ClientHandler.TAG, request, null, handler );
+	}
+
+	@Override
+	public void requestCertificate(CertificateRequest request, CompletionHandler<Serializable, Object> handler) {
+		Key key = getKeyFactory().create(request.toString());
+		for(Node node:getRouter().findNode(key))
+			getRouter().sendRequest(node, CertificateRequest.TAG, request, null, handler);
 	}
 }
